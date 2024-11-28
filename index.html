@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תכנית עבודה שנתית</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const App = () => {
+            const tasks = [
+                { id: 1, name: 'מנהלות' },
+                { id: 2, name: 'הורים' },
+                { id: 3, name: 'הופעות פנים' },
+                { id: 4, name: 'הופעות חוץ' },
+                { id: 5, name: 'הקלטות' },
+                { id: 6, name: 'תורמת' },
+                { id: 7, name: 'וועדת היגוי' },
+                { id: 8, name: 'תקשורת' }
+            ];
+
+            const months = [
+                'דצמבר', 'ינואר', 'פברואר', 'מרץ', 'אפריל',
+                'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר'
+            ];
+
+            const [data, setData] = React.useState({});
+
+            React.useEffect(() => {
+                // קריאת הנתונים מהקובץ בטעינה
+                fetch('data.json')
+                    .then(response => response.json())
+                    .then(savedData => {
+                        if (savedData) {
+                            setData(savedData);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading data:', error);
+                    });
+            }, []);
+
+            const handleCellChange = (taskId, month, value) => {
+                setData(prev => ({
+                    ...prev,
+                    [taskId]: {
+                        ...prev[taskId],
+                        [month]: value
+                    }
+                }));
+            };
+
+            const handleSave = async () => {
+                try {
+                    const response = await fetch('save.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        alert('הנתונים נשמרו בהצלחה!');
+                    } else {
+                        throw new Error('שגיאה בשמירת הנתונים');
+                    }
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                    alert('שגיאה בשמירת הנתונים');
+                }
+            };
+
+            return (
+                <div className="min-h-screen p-4 bg-white">
+                    <div className="mb-4 text-right text-2xl font-bold">
+                        תכנית עבודה שנתית
+                    </div>
+                    <div className="w-full overflow-x-auto">
+                        <div className="min-w-max">
+                            <div className="flex border-b bg-gray-50">
+                                <div className="w-32 flex-shrink-0 p-3 font-bold border-r"></div>
+                                {months.map((month) => (
+                                    <div 
+                                        key={month} 
+                                        className="w-40 p-3 text-center font-bold border-r"
+                                    >
+                                        {month}
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {tasks.map((task) => (
+                                <div key={task.id} className="flex border-b">
+                                    <div className="w-32 flex-shrink-0 p-3 font-medium border-r bg-gray-50">
+                                        {task.name}
+                                    </div>
+                                    {months.map((month) => (
+                                        <div 
+                                            key={`${task.id}-${month}`} 
+                                            className="w-40 p-1 border-r"
+                                        >
+                                            <input
+                                                type="text"
+                                                className="w-full h-10 px-2 border rounded focus:outline-none focus:border-blue-500"
+                                                value={data[task.id]?.[month] || ''}
+                                                onChange={(e) => handleCellChange(task.id, month, e.target.value)}
+                                                placeholder="הכנס"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6 flex justify-center">
+                        <button
+                            onClick={handleSave}
+                            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-12 rounded-lg text-lg"
+                        >
+                            שמור
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
